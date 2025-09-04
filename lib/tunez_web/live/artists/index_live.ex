@@ -38,7 +38,7 @@ defmodule TunezWeb.Artists.IndexLive do
         <br /> No artist data to display!
       </div>
 
-      <ul class="gap-6 lg:gap-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+      <ul class="grid grid-cols-2 gap-6 lg:gap-12 sm:grid-cols-3 lg:grid-cols-4">
         <li :for={artist <- @artists}>
           <.artist_card artist={artist} />
         </li>
@@ -79,7 +79,7 @@ defmodule TunezWeb.Artists.IndexLive do
 
   def follow_icon(assigns) do
     ~H"""
-    <.icon name="hero-star-solid" class="w-8 h-8 bg-yellow-400 absolute top-2 right-2" />
+    <.icon name="hero-star-solid" class="absolute w-8 h-8 bg-yellow-400 top-2 right-2" />
     """
   end
 
@@ -88,7 +88,7 @@ defmodule TunezWeb.Artists.IndexLive do
     <span
       :if={@count > 0}
       data-role="follower-count"
-      class="text-zinc-500 text-sm whitespace-nowrap pt-1 pl-1"
+      class="pt-1 pl-1 text-sm text-zinc-500 whitespace-nowrap"
     >
       <.icon name="hero-star" class="size-4 -mt-0.5" /> {round_count(@count)}
     </span>
@@ -114,8 +114,8 @@ defmodule TunezWeb.Artists.IndexLive do
 
   def search_box(assigns) do
     ~H"""
-    <form class="relative w-fit inline-block" {@rest}>
-      <.icon name="hero-magnifying-glass" class="w-4 h-4 m-2 ml-3 mt-4 absolute bg-gray-400" />
+    <form class="relative inline-block w-fit" {@rest}>
+      <.icon name="hero-magnifying-glass" class="absolute w-4 h-4 m-2 mt-4 ml-3 bg-gray-400" />
       <label for="search-text" class="hidden">Search</label>
       <.input
         class="!rounded-full p-1 pl-8 !w-32 sm:!w-48"
