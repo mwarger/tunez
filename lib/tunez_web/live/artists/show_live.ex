@@ -8,21 +8,11 @@ defmodule TunezWeb.Artists.ShowLive do
   end
 
   def handle_params(%{"id" => artist_id}, _url, socket) do
-    artist = Tunez.Music.get_artist_by_id!(artist_id)
-
-    albums = [
-      %{
-        id: "test-album-1",
-        name: "Test Album",
-        year_released: 2023,
-        cover_image_url: nil
-      }
-    ]
+    artist = Tunez.Music.get_artist_by_id!(artist_id, load: [:albums])
 
     socket =
       socket
       |> assign(:artist, artist)
-      |> assign(:albums, albums)
       |> assign(:page_title, artist.name)
 
     {:noreply, socket}
@@ -58,7 +48,7 @@ defmodule TunezWeb.Artists.ShowLive do
       </.button_link>
 
       <ul class="mt-10 space-y-6 md:space-y-10">
-        <li :for={album <- @albums}>
+        <li :for={album <- @artist.albums}>
           <.album_details album={album} />
         </li>
       </ul>
@@ -68,8 +58,8 @@ defmodule TunezWeb.Artists.ShowLive do
 
   def album_details(assigns) do
     ~H"""
-    <div id={"album-#{@album.id}"} class="md:flex gap-8 group">
-      <div class="mx-auto mb-6 md:mb-0 w-2/3 md:w-72 lg:w-96">
+    <div id={"album-#{@album.id}"} class="gap-8 md:flex group">
+      <div class="w-2/3 mx-auto mb-6 md:mb-0 md:w-72 lg:w-96">
         <.cover_image image={@album.cover_image_url} />
       </div>
       <div class="flex-1">
@@ -104,15 +94,15 @@ defmodule TunezWeb.Artists.ShowLive do
   defp track_details(assigns) do
     ~H"""
     <table :if={@tracks != []} class="w-full mt-2 -z-10">
-      <tr :for={track <- @tracks} class="border-t first:border-0 border-gray-100">
-        <th class="whitespace-nowrap w-1 p-3">
+      <tr :for={track <- @tracks} class="border-t border-gray-100 first:border-0">
+        <th class="w-1 p-3 whitespace-nowrap">
           {String.pad_leading("#{track.order}", 2, "0")}.
         </th>
         <td class="p-3">{track.name}</td>
-        <td class="whitespace-nowrap w-1 text-right p-2">{track.duration_seconds}</td>
+        <td class="w-1 p-2 text-right whitespace-nowrap">{track.duration_seconds}</td>
       </tr>
     </table>
-    <div :if={@tracks == []} class="p-8 text-center italic text-gray-400">
+    <div :if={@tracks == []} class="p-8 italic text-center text-gray-400">
       <.icon name="hero-clock" class="w-12 h-12 bg-base-300" /> Track data coming soon....
     </div>
     """
@@ -138,7 +128,7 @@ defmodule TunezWeb.Artists.ShowLive do
     assigns = assign(assigns, :event, event)
 
     ~H"""
-    <span phx-click={@event} class="ml-3 inline-block">
+    <span phx-click={@event} class="inline-block ml-3">
       <.icon
         name={if @on, do: "hero-star-solid", else: "hero-star"}
         class="w-8 h-8 bg-yellow-400 -mt-1.5 cursor-pointer"
@@ -169,8 +159,29 @@ defmodule TunezWeb.Artists.ShowLive do
     end
   end
 
-  def handle_event("destroy-album", _params, socket) do
-    {:noreply, socket}
+  def handle_event("destroy-album", %{"id" => album_id}, socket) do
+    case Tunez.Music.destroy_album(album_id) do
+      :ok ->
+        socket =
+          socket
+          |> update(:artist, fn artist ->
+            Map.update!(artist, :albums, fn albums ->
+              Enum.reject(albums, &(&1.id == album_id))
+            end)
+          end)
+          |> put_flash(:info, "Album deleted successfully")
+
+        {:noreply, socket}
+
+      {:error, error} ->
+        Logger.info("Could not delete album '#{album_id}': #{inspect(error)}")
+
+        socket =
+          socket
+          |> put_flash(:error, "Could not delete album")
+
+        {:noreply, socket}
+    end
   end
 
   def handle_event("follow", _params, socket) do
