@@ -13,7 +13,7 @@ defmodule TunezWeb.Artists.IndexLive do
 
   def handle_params(params, _url, socket) do
     query_text = Map.get(params, "q", "")
-    artists = Tunez.Music.read_artists!()
+    artists = Tunez.Music.search_artists!(query_text)
 
     socket =
       socket
