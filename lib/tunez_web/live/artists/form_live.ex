@@ -7,7 +7,7 @@ defmodule TunezWeb.Artists.FormLive do
 
     socket =
       socket
-      |> assign(:form, to_form(form))
+      |> assign(:form, form)
       |> assign(:page_title, "Update Artist")
 
     {:ok, socket}
@@ -18,7 +18,7 @@ defmodule TunezWeb.Artists.FormLive do
 
     socket =
       socket
-      |> assign(:form, to_form(form))
+      |> assign(:form, form)
       |> assign(:page_title, "New Artist")
 
     {:ok, socket}
@@ -73,7 +73,5 @@ defmodule TunezWeb.Artists.FormLive do
 
         {:noreply, socket}
     end
-
-    {:noreply, socket}
   end
 end

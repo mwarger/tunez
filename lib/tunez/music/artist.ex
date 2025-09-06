@@ -4,6 +4,10 @@ defmodule Tunez.Music.Artist do
   postgres do
     table "artists"
     repo Tunez.Repo
+
+    custom_indexes do
+      index "name gin_trgm_ops", name: "artists_name_gin_index", using: "GIN"
+    end
   end
 
   actions do
@@ -18,20 +22,20 @@ defmodule Tunez.Music.Artist do
       require_atomic? false
       accept [:name, :biography]
 
-      change fn changeset, _context ->
-               new_name = Ash.Changeset.get_attribute(changeset, :name)
-               previous_name = Ash.Changeset.get_attribute(changeset, :name)
-               previous_names = Ash.Changeset.get_attribute(changeset, :previous_names)
-
-               names =
-                 [previous_name | previous_names]
-                 |> Enum.uniq()
-                 |> Enum.reject(fn name -> name == new_name end)
-             end,
-             where: [changing(:name)]
+      change Tunez.Music.Changes.UpdatePreviousNames,
+        where: [changing(:name)]
     end
 
     destroy :destroy do
+    end
+
+    read :search do
+      argument :query, :ci_string do
+        constraints allow_empty?: true
+        default ""
+      end
+
+      filter expr(contains(name, ^arg(:query)))
     end
   end
 
